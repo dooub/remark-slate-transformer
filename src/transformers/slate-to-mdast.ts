@@ -1,3 +1,4 @@
+// @ts-nocheck
 import * as unistLib from "unist";
 import * as slate from "../models/slate";
 import * as mdast from "../models/mdast";
@@ -36,7 +37,7 @@ function convertNodes(nodes: slate.Node[]): unistLib.Node[] {
       const starts: DecorationType[] = [];
       let textTemp: string = "";
       for (let j = 0; j < textQueue.length; j++) {
-        const cur = textQueue[j];
+        const cur:any = textQueue[j];
         textTemp += cur.text;
 
         const prevStartsStr = starts.toString();
@@ -56,6 +57,15 @@ function convertNodes(nodes: slate.Node[]): unistLib.Node[] {
             }
           }
         );
+
+        if (cur["color"]) {
+          if (!prev || !prev["color"]) {
+            starts.push("color");
+          }
+          if (!next || !next["color"]) {
+            ends.push("color");
+          }
+        }
 
         const endsToRemove = starts.reduce<
           { key: DecorationType; index: number }[]
@@ -86,6 +96,7 @@ function convertNodes(nodes: slate.Node[]): unistLib.Node[] {
           let res: TextOrDecoration = {
             type: "text",
             value: textTemp,
+            color: cur.color
           };
           textTemp = "";
           const startsReversed = starts.slice().reverse();
@@ -105,6 +116,15 @@ function convertNodes(nodes: slate.Node[]): unistLib.Node[] {
                   children: [res],
                 };
                 break;
+              case "color":
+                if (!res.children) { 
+                  res = {
+                    type: "text",
+                    color: res.color,
+                    value: res.value,
+                  };
+                }
+                break;
               default:
                 const _: never = k;
                 break;
@@ -112,11 +132,11 @@ function convertNodes(nodes: slate.Node[]): unistLib.Node[] {
           });
           const arr: TextOrDecoration[] = [];
           if (bef.length > 0) {
-            arr.push({ type: "text", value: bef });
+            arr.push({ type: "text", value: bef, color: cur.color });
           }
           arr.push(res);
           if (aft.length > 0) {
-            arr.push({ type: "text", value: aft });
+            arr.push({ type: "text", value: aft, color: cur.color });
           }
           mdastTexts.push(...arr);
         }
@@ -126,7 +146,11 @@ function convertNodes(nodes: slate.Node[]): unistLib.Node[] {
             starts.splice(e.index, 1);
           });
         } else {
-          mdastTexts.push({ type: "text", value: textTemp });
+          const payload = { type: "text", value: textTemp}
+          if (cur.color) {
+            payload.color = cur.color 
+          }
+          mdastTexts.push(payload);
           textTemp = "";
         }
       }
@@ -215,7 +239,7 @@ function mergeTexts(nodes: TextOrDecoration[]): TextOrDecoration[] {
   const res: TextOrDecoration[] = [];
   for (const cur of nodes) {
     const last = res[res.length - 1];
-    if (last && last.type === cur.type) {
+    if (last && last.type === cur.type && last.color === cur.color) {
       if (last.type === "text") {
         last.value += (cur as typeof last).value;
       } else if (last.type === "inlineCode") {

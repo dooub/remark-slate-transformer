@@ -92,6 +92,7 @@ export interface FootnoteDefinition extends Parent, Association {
 
 export interface Text extends Literal {
   type: "text";
+  color?: string;
 }
 
 export interface Emphasis extends Parent {
