@@ -48,13 +48,6 @@ object-assign
  * Released under the MIT License.
  */
 
-/*!
- * repeat-string <https://github.com/jonschlinkert/repeat-string>
- *
- * Copyright (c) 2014-2015, Jon Schlinkert.
- * Licensed under the MIT License.
- */
-
 /*! https://mths.be/esrever v0.2.0 by @mathias */
 
 /**
