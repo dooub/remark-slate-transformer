@@ -184,8 +184,22 @@ function createMdastNode(
       return createThematicBreak(node);
     case "blockquote":
       return createBlockquote(node);
+    case "ordered-list":
+    case "unordered-list":
+      const clone = {...node};
+      clone.ordered = node.type === "ordered-list";
+      clone.type = "list";
+      return createList(clone);
     case "list":
       return createList(node);
+    case "list-item":
+      const clone = {...node};
+      clone.type = "listItem";
+      return createListItem(clone);
+    case "list-item-text":
+      const clone = {...node};
+      clone.type = "paragraph";
+      return createParagraph(clone);
     case "listItem":
       return createListItem(node);
     case "table":
