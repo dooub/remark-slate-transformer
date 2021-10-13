@@ -238,6 +238,8 @@ function createMdastNode(
       return createMath(node);
     case "inlineMath":
       return createInlineMath(node);
+    case "custom":
+      return node;
     default:
       const _: never = node;
       break;
