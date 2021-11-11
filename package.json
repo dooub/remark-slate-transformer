@@ -10,6 +10,7 @@
   ],
   "scripts": {
     "build": "rollup -c",
+    "build:watch": "rollup -c -w",
     "test": "jest",
     "tsc": "tsc -p . --noEmit",
     "tsc:d": "tsc -p . --outDir lib -d --emitDeclarationOnly",
@@ -72,5 +73,8 @@
   "bugs": {
     "url": "https://github.com/inokawa/remark-slate-transformer/issues"
   },
-  "homepage": "https://github.com/inokawa/remark-slate-transformer#readme"
+  "homepage": "https://github.com/inokawa/remark-slate-transformer#readme",
+  "dependencies": {
+    "query-string": "^7.0.1"
+  }
 }

@@ -1,5 +1,6 @@
 import * as slate from "../models/slate";
 import * as mdast from "../models/mdast";
+import { parse } from 'query-string';
 
 export type Decoration = {
   [key in (
@@ -30,6 +31,14 @@ function convertNodes(nodes: mdast.Content[], deco: Decoration): slate.Node[] {
 }
 
 function createSlateNode(node: mdast.Content, deco: Decoration): SlateNode[] {
+
+  // @ts-ignore
+  const customComponentData = node.type === 'paragraph' && node?.children?.[0]?.value?.match(/\{\{[^}]*\}\}/);
+
+  if (customComponentData?.length) {
+    // @ts-ignore
+    return handleCustomMarkdown(node?.children?.[0]);
+  }
   switch (node.type) {
     case "paragraph":
       return [createParagraph(node, deco)];
@@ -62,6 +71,13 @@ function createSlateNode(node: mdast.Content, deco: Decoration): SlateNode[] {
     case "footnoteDefinition":
       return [createFootnoteDefinition(node, deco)];
     case "text":
+      const colorMatches = node.value.match(/\{[a-zA-Z]+\}\([^)]*\)/gm);
+      if (colorMatches?.length){
+        const words = handleColoredText(node.value);
+        return words.map((word:any) => {
+          return createText(word.text, deco, word.color)
+        })
+      }
       return [createText(node.value, deco)];
     case "emphasis":
     case "strong":
@@ -102,6 +118,80 @@ function createSlateNode(node: mdast.Content, deco: Decoration): SlateNode[] {
 }
 
 export type Paragraph = ReturnType<typeof createParagraph>;
+
+function parseColorText (str:string) {
+  const color = str.match(/\{[a-zA-Z]+\}/gm)?.[0].replace('{', '').replace('}', '')
+  const text = str.match(/\([^)]*\)/gm)?.[0]?.replace('(', '').replace(')', '')
+  return {
+    color, 
+    text
+  }
+}
+
+function handleColoredText(str:string):any{
+  let text = str;
+
+  const colorMatches = text.match(/\{[a-zA-Z]+\}\([^)]*\)/gm);
+
+  if(!colorMatches || !colorMatches.length) return [];
+  const words = [];
+  
+  for (let i = 0; i < colorMatches.length; i++) {
+    const index = text.indexOf(colorMatches[i]);
+    if (index === 0) {
+      words.push(parseColorText(colorMatches[i])) 
+      text = text.replace(colorMatches[i], '')
+    } else {
+      words.push({
+        text: text.slice(0, index)
+      })
+      // @ts-ignore
+      text = text.replace(words[words.length - 1].text, '');
+      
+      words.push(parseColorText(colorMatches[i])) 
+      text = text.replace(colorMatches[i], '')
+    }
+    
+    if(i === colorMatches.length - 1 && text) {
+      words.push({
+        text: text
+      });
+    }
+  }
+  return words;
+}
+
+function handleCustomMarkdown(node: mdast.Text){
+  const matches = node.value.match(/\{\{[^}]*\}\}/)
+  return matches!.reduce((prev, curr) => {
+    prev.push(
+      // @ts-ignore
+      createCustomNode(curr)
+    )
+    return prev;
+  }, [])
+}
+
+function createCustomNode(rawData: any) {
+  const body = rawData.replace('{{', '').replace('}}', '')
+  const [subtype, options='', props=''] = body.split('|');
+  const parsedProps = parse(props);
+  const subtypeLowercased = subtype.toLowerCase();
+  const payload:any = {
+    type: 'custom',
+    subtype: subtypeLowercased,
+    ...parsedProps,
+    ...parse(options),
+    children: [{text: ''}]
+  }
+  if (['image', 'video'].includes(subtypeLowercased)){
+    // @ts-ignore
+    const ids = parsedProps?.id?.split(',');
+    payload.ids = ids?.length ? ids : [];
+    payload.urls = [];
+  }
+  return payload;
+}
 
 function createParagraph(node: mdast.Paragraph, deco: Decoration) {
   const { type, children } = node;
@@ -289,11 +379,15 @@ function createFootnoteDefinition(
 
 export type Text = ReturnType<typeof createText>;
 
-function createText(text: string, deco: Decoration) {
-  return {
+function createText(text: string, deco: Decoration, color?:string) {
+  const payload:any = {
     ...deco,
     text,
   };
+  if (color) {
+    payload.color = color;
+  }
+  return payload;
 }
 
 export type Break = ReturnType<typeof createBreak>;
