@@ -39,6 +39,8 @@ function createSlateNode(node: mdast.Content, deco: Decoration): SlateNode[] {
     // @ts-ignore
     return handleCustomMarkdown(node?.children?.[0]);
   }
+
+
   switch (node.type) {
     case "paragraph":
       return [createParagraph(node, deco)];
@@ -71,7 +73,8 @@ function createSlateNode(node: mdast.Content, deco: Decoration): SlateNode[] {
     case "footnoteDefinition":
       return [createFootnoteDefinition(node, deco)];
     case "text":
-      const colorMatches = node.value.match(/\{[a-zA-Z]+\}\([^)]*\)/gm);
+      const colorMatches = node.value?.match(/\{[a-zA-Z]+\}\([^)]*\)/gm);
+
       if (colorMatches?.length){
         const words = handleColoredText(node.value);
         return words.map((word:any) => {
@@ -91,6 +94,15 @@ function createSlateNode(node: mdast.Content, deco: Decoration): SlateNode[] {
     case "inlineCode": {
       const { type, value } = node;
       return [createText(value, { ...deco, [type]: true })];
+    }
+    // @ts-ignore
+    case "list-item-text": {
+      const { type, children } = node;
+      return [{
+        // @ts-ignore
+        type,
+        children: convertNodes(children,deco)
+      }];
     }
     case "break":
       return [createBreak(node)];
@@ -235,23 +247,36 @@ export type List = ReturnType<typeof createList>;
 function createList(node: mdast.List, deco: Decoration) {
   const { type, children, ordered, start, spread } = node;
   return {
-    type,
+    type: ordered ? 'ordered-list' : 'unordered-list',
     children: convertNodes(children, deco),
-    ordered,
-    start,
-    spread,
+    // ordered,
+    // start,
+    // spread,
   };
 }
 
 export type ListItem = ReturnType<typeof createListItem>;
 
+
+
 function createListItem(node: mdast.ListItem, deco: Decoration) {
   const { type, children, checked, spread } = node;
+  const newChildren = children.map((child) => {
+    if (child.type === 'paragraph'){
+      return {
+        // @ts-ignore
+        ...child,
+        type: 'list-item-text',
+      }
+      // @ts-ignore
+    } else if (child.children) {
+      return child;
+    }
+  })
   return {
-    type,
-    children: convertNodes(children, deco),
-    checked,
-    spread,
+    type: 'list-item',
+    // @ts-ignore
+    children: convertNodes(newChildren, deco),
   };
 }
 
