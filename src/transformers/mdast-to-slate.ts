@@ -73,7 +73,7 @@ function createSlateNode(node: mdast.Content, deco: Decoration): SlateNode[] {
     case "footnoteDefinition":
       return [createFootnoteDefinition(node, deco)];
     case "text":
-      const colorMatches = node.value?.match(/\{[a-zA-Z]+\}\([^)]*\)/gm);
+      const colorMatches = node.value?.match(/\{[#a-zA-Z0-9]+\}\([^)]*\)/gm);
 
       if (colorMatches?.length){
         const words = handleColoredText(node.value);
@@ -132,10 +132,10 @@ function createSlateNode(node: mdast.Content, deco: Decoration): SlateNode[] {
 export type Paragraph = ReturnType<typeof createParagraph>;
 
 function parseColorText (str:string) {
-  const color = str.match(/\{[a-zA-Z]+\}/gm)?.[0].replace('{', '').replace('}', '')
+  const color = str.match(/\{[#a-zA-Z0-9]+\}/gm)?.[0].replace('{', '').replace('}', '')
   const text = str.match(/\([^)]*\)/gm)?.[0]?.replace('(', '').replace(')', '')
   return {
-    color, 
+    color,
     text
   }
 }
@@ -143,15 +143,15 @@ function parseColorText (str:string) {
 function handleColoredText(str:string):any{
   let text = str;
 
-  const colorMatches = text.match(/\{[a-zA-Z]+\}\([^)]*\)/gm);
+  const colorMatches = text.match(/\{[#a-zA-Z0-9]+\}\([^)]*\)/gm);
 
   if(!colorMatches || !colorMatches.length) return [];
   const words = [];
-  
+
   for (let i = 0; i < colorMatches.length; i++) {
     const index = text.indexOf(colorMatches[i]);
     if (index === 0) {
-      words.push(parseColorText(colorMatches[i])) 
+      words.push(parseColorText(colorMatches[i]))
       text = text.replace(colorMatches[i], '')
     } else {
       words.push({
@@ -159,11 +159,11 @@ function handleColoredText(str:string):any{
       })
       // @ts-ignore
       text = text.replace(words[words.length - 1].text, '');
-      
-      words.push(parseColorText(colorMatches[i])) 
+
+      words.push(parseColorText(colorMatches[i]))
       text = text.replace(colorMatches[i], '')
     }
-    
+
     if(i === colorMatches.length - 1 && text) {
       words.push({
         text: text
