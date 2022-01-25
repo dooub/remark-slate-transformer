@@ -27,7 +27,7 @@ function convertNodes(nodes: mdast.Content[], deco: Decoration): slate.Node[] {
   return nodes.reduce<slate.Node[]>((acc, node) => {
     const ret = createSlateNode(node, deco);
     // @ts-ignore
-    acc.push.apply(arr, node.type !== 'text' ? new Array(node.position.start.line - prev_pos).fill(createBreak(node)).concat(ret) : ret);
+    acc.push.apply(acc, node.type !== 'text' ? new Array(node.position.start.line - prev_pos).fill(createBreak(node)).concat(ret) : ret);
     // @ts-ignore
     prev_pos = node.position.end.line;
     return acc;
@@ -423,7 +423,7 @@ export type Break = ReturnType<typeof createBreak>;
 
 function createBreak(node: mdast.Break) {
   return {
-    type: node.type,
+    type: 'break',
     children: [{ text: "" }],
   };
 }
