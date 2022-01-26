@@ -27,7 +27,7 @@ function convertNodes(nodes: mdast.Content[], deco: Decoration): slate.Node[] {
   return nodes.reduce<slate.Node[]>((acc, node) => {
     const ret = createSlateNode(node, deco);
     // @ts-ignore
-    acc.push.apply(acc, node.type !== 'text' ? new Array(node.position.start.line - prev_pos).fill(createBreak(node)).concat(ret) : ret);
+    acc.push.apply(acc, node.type !== 'text' ? new Array(node.position.start.line - prev_pos).fill().map(()=>createBreak(node)).concat(ret) : ret);
     // @ts-ignore
     prev_pos = node.position.end.line;
     return acc;
