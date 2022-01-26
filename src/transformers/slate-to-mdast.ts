@@ -117,7 +117,7 @@ function convertNodes(nodes: slate.Node[]): unistLib.Node[] {
                 };
                 break;
               case "color":
-                if (!res.children) { 
+                if (!res.children) {
                   res = {
                     type: "text",
                     color: res.color,
@@ -148,7 +148,7 @@ function convertNodes(nodes: slate.Node[]): unistLib.Node[] {
         } else {
           const payload = { type: "text", value: textTemp}
           if (cur.color) {
-            payload.color = cur.color 
+            payload.color = cur.color
           }
           mdastTexts.push(payload);
           textTemp = "";
@@ -239,6 +239,7 @@ function createMdastNode(
     case "inlineMath":
       return createInlineMath(node);
     case "custom":
+    case "br":
       return node;
     default:
       const _: never = node;
@@ -417,7 +418,7 @@ function createFootnoteDefinition(
 function createBreak(node: slateInternal.Break): mdast.Break {
   const { type } = node;
   return {
-    type,
+    type: "br",
   };
 }
 

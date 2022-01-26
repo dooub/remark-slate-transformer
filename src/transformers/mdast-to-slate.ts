@@ -423,7 +423,7 @@ export type Break = ReturnType<typeof createBreak>;
 
 function createBreak(node: mdast.Break) {
   return {
-    type: node.type,
+    type: "br",
     children: [{ text: "" }],
   };
 }
