@@ -23,11 +23,11 @@ function convertNodes(nodes: mdast.Content[], deco: Decoration): slate.Node[] {
   if (nodes.length === 0) {
     return [{ text: "" }];
   }
-  let prev_pos = 1;
+  let prev_pos = 0;
   return nodes.reduce<slate.Node[]>((acc, node) => {
     const ret = createSlateNode(node, deco);
     // @ts-ignore
-    acc.push.apply(acc, node.type !== 'text' ? new Array(node.position.start.line - prev_pos).fill().map(()=>createBreak(node)).concat(ret) : ret);
+    acc.push.apply(acc, node.type === 'paragraph' ? new Array(node.position.start.line - prev_pos - 1).fill().map(()=>createBreak(node)).concat(ret) : ret);
     // @ts-ignore
     prev_pos = node.position.end.line;
     return acc;
