@@ -1,5 +1,5 @@
-import * as slate from "../models/slate";
-import * as mdast from "../models/mdast";
+import * as slate from '../models/slate';
+import * as mdast from '../models/mdast';
 import { parse } from 'query-string';
 
 export type Decoration = {
@@ -23,13 +23,8 @@ function convertNodes(nodes: mdast.Content[], deco: Decoration): slate.Node[] {
   if (nodes.length === 0) {
     return [{ text: "" }];
   }
-  let prev_pos = 0;
   return nodes.reduce<slate.Node[]>((acc, node) => {
-    const ret = createSlateNode(node, deco);
-    // @ts-ignore
-    acc.push.apply(acc, node.type === 'paragraph' ? new Array(node.position.start.line - prev_pos - 1).fill().map(()=>createBreak(node)).concat(ret) : ret);
-    // @ts-ignore
-    prev_pos = node.position.end.line;
+    acc.push(...createSlateNode(node, deco));
     return acc;
   }, []);
 }
@@ -423,7 +418,7 @@ export type Break = ReturnType<typeof createBreak>;
 
 function createBreak(node: mdast.Break) {
   return {
-    type: "br",
+    type: "break",
     children: [{ text: "" }],
   };
 }

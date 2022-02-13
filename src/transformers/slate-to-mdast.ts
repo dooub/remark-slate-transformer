@@ -239,7 +239,6 @@ function createMdastNode(
     case "inlineMath":
       return createInlineMath(node);
     case "custom":
-    case "br":
       return node;
     default:
       const _: never = node;
@@ -418,7 +417,7 @@ function createFootnoteDefinition(
 function createBreak(node: slateInternal.Break): mdast.Break {
   const { type } = node;
   return {
-    type: "br",
+    type: "break",
   };
 }
 
